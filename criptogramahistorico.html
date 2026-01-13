@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <title>Criptograma Histórico Interativo</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Georgia', serif;
+      background: url('https://upload.wikimedia.org/wikipedia/commons/2/21/Old_paper_texture.jpg');
+      background-size: cover;
+      color: #3b2f2f;
+    }
+    .page { display: none; min-height: 100vh; padding: 40px; }
+    .page.active { display: block; }
+    h1 { text-align: center; }
+    .slots { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .slot { width: 50px; height: 50px; border: 2px solid #5a4634; background: rgba(255,255,255,0.8); text-align: center; line-height: 50px; font-weight: bold; font-size: 22px; }
+    .letters { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .letter { width: 50px; height: 50px; background: #e6d3a3; border: 1px solid #5a4634; text-align: center; line-height: 50px; cursor: grab; font-weight: bold; font-size: 22px; }
+    .nav { display: flex; justify-content: space-between; margin-top: 40px; }
+    button { background: #5a4634; color: white; border: none; padding: 10px 20px; cursor: pointer; font-size: 16px; }
+    .feedback { text-align: center; font-weight: bold; font-size: 20px; margin-top: 15px; }
+  </style>
+</head>
+<body>
+
+<div id="container"></div>
+
+<script>
+const pages = [
+  'HUMANISMO',
+  'MECENATO',
+  'TEOCENTRISMO',
+  'MICHELANGELO',
+  'NATURALISMO',
+  'ARTE',
+  'ARQUITETURA',
+  'PINTURA',
+  'RENASCIMENTO',
+  'HELIOCENTRISMO'
+];
+
+const container = document.getElementById('container');
+let dragged = null;
+let historyMap = new Map();
+
+pages.forEach((word, i) => {
+  const page = document.createElement('div');
+  page.className = 'page' + (i === 0 ? ' active' : '');
+  page.dataset.answer = word;
+  page.id = 'p' + i;
+
+  page.innerHTML = `
+    <h1>Criptograma ${i + 1}</h1>
+    <div class="slots"></div>
+    <div class="letters"></div>
+    <div class="feedback"></div>
+    <div style="text-align:center; margin-top:10px;">
+      <button onclick="apagarLetra(${i})">⌫ Apagar</button>
+    </div>
+    <div class="nav">
+      <button ${i === 0 ? 'disabled' : ''} onclick="goPage(${i - 1})">⬅</button>
+      <button ${i === pages.length - 1 ? 'disabled' : ''} onclick="goPage(${i + 1})">➡</button>
+    </div>
+  `;
+
+  const slots = page.querySelector('.slots');
+  word.split('').forEach(() => {
+    const s = document.createElement('div');
+    s.className = 'slot';
+    slots.appendChild(s);
+  });
+
+  const letters = page.querySelector('.letters');
+  [...word].sort(() => Math.random() - 0.5).forEach(l => {
+    const d = document.createElement('div');
+    d.className = 'letter';
+    d.textContent = l;
+    d.draggable = true;
+    d.addEventListener('dragstart', e => dragged = e.target);
+    letters.appendChild(d);
+  });
+
+  container.appendChild(page);
+});
+
+// DRAG & DROP
+container.addEventListener('dragover', e => e.preventDefault());
+container.addEventListener('drop', e => {
+  if (e.target.classList.contains('slot') && !e.target.textContent) {
+    const page = e.target.closest('.page');
+    e.target.textContent = dragged.textContent;
+    historyMap.set(e.target, dragged);
+    dragged.style.visibility = 'hidden';
+    check(page);
+  }
+});
+
+;
+
+// TECLADO
+document.addEventListener('keydown', e => {
+  const page = document.querySelector('.page.active');
+  if (!page) return;
+
+  if (e.key === 'Backspace') {
+    apagarLetra(parseInt(page.id.replace('p','')));
+    return;
+  }
+
+  if (/^[a-zA-Z]$/.test(e.key)) {
+    const slot = [...page.querySelectorAll('.slot')].find(s => !s.textContent);
+    if (slot) {
+      slot.textContent = e.key.toUpperCase();
+      historyMap.set(slot, null);
+      check(page);
+    }
+  }
+});
+
+function check(page) {
+  const filled = [...page.querySelectorAll('.slot')].every(s => s.textContent);
+  if (!filled) return;
+
+  const word = [...page.querySelectorAll('.slot')].map(s => s.textContent).join('');
+  const feedback = page.querySelector('.feedback');
+
+  if (word === page.dataset.answer) {
+    feedback.textContent = 'Certo!';
+    feedback.style.color = 'green';
+  } else {
+    feedback.textContent = 'Errado!';
+    feedback.style.color = 'darkred';
+  }
+}
+
+function apagarLetra(index) {
+  const page = document.getElementById('p' + index);
+  const slots = [...page.querySelectorAll('.slot')];
+  for (let i = slots.length - 1; i >= 0; i--) {
+    if (slots[i].textContent) {
+      const origin = historyMap.get(slots[i]);
+      if (origin) origin.style.visibility = 'visible';
+      slots[i].textContent = '';
+      historyMap.delete(slots[i]);
+      page.querySelector('.feedback').textContent = '';
+      break;
+    }
+  }
+}
+
+
+function goPage(n) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('p' + n).classList.add('active');
+}
+</script>
+
+</body>
+</html>
