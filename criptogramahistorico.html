@@ -29,16 +29,20 @@
 
 <script>
 const pages = [
+  'MICHELANGELO',
+  'RENASCIMENTO',
+  'INDIVIDUALISMO',
   'HUMANISMO',
   'MECENATO',
+  'ANTROPOCENTRISMO',
   'TEOCENTRISMO',
-  'MICHELANGELO',
   'NATURALISMO',
+  'HELIOCENTRISMO',
+  'GEOCENTRISMO',
   'ARTE',
   'ARQUITETURA',
   'PINTURA',
-  'RENASCIMENTO',
-  'HELIOCENTRISMO'
+  'ESCULTURA'
 ];
 
 const container = document.getElementById('container');
@@ -61,7 +65,7 @@ pages.forEach((word, i) => {
     </div>
     <div class="nav">
       <button ${i === 0 ? 'disabled' : ''} onclick="goPage(${i - 1})">⬅</button>
-      <button ${i === pages.length - 1 ? 'disabled' : ''} onclick="goPage(${i + 1})">➡</button>
+      <button onclick="${i === pages.length - 1 ? 'goFim()' : `goPage(${i + 1})`}">➡</button>
     </div>
   `;
 
@@ -85,6 +89,18 @@ pages.forEach((word, i) => {
   container.appendChild(page);
 });
 
+// PÁGINA FINAL - FIM!
+const fimPage = document.createElement('div');
+fimPage.className = 'page';
+fimPage.id = 'fim';
+fimPage.innerHTML = `
+  <h1 style="font-size:70px; margin-top:200px;">FIM!</h1>
+  <div style="text-align:center; margin-top:40px;">
+    <button onclick="goPage(0)">⟲ Voltar ao início</button>
+  </div>
+`;
+container.appendChild(fimPage);
+
 // DRAG & DROP
 container.addEventListener('dragover', e => e.preventDefault());
 container.addEventListener('drop', e => {
@@ -96,8 +112,6 @@ container.addEventListener('drop', e => {
     check(page);
   }
 });
-
-;
 
 // TECLADO
 document.addEventListener('keydown', e => {
@@ -150,10 +164,14 @@ function apagarLetra(index) {
   }
 }
 
-
 function goPage(n) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('p' + n).classList.add('active');
+}
+
+function goFim() {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('fim').classList.add('active');
 }
 </script>
 
